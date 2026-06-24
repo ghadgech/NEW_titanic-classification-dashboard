@@ -241,30 +241,56 @@ if selected == "🏠 Overview":
 
     with col_c:
         st.markdown("#### AI Risk Heatmap")
-        risk_names = ["Model Bias", "Hallucination", "Data Breach",
-                      "Regulatory", "Model Drift", "Shadow AI", "Over-reliance"]
-        likelihood = [3, 3, 2, 2, 3, 3, 2]
-        impact     = [3, 3, 4, 4, 2, 2, 2]
-        colors_risk = ["red" if (l + i) >= 6 else "orange" if (l + i) >= 5 else "gold"
-                       for l, i in zip(likelihood, impact)]
+
+        # Each risk: (name, likelihood, impact, dot_x, dot_y, label_x, label_y, color)
+        # Dot positions are jittered where risks share a zone; label positions avoid overlap
+        risks = [
+            ("Model Bias",    3, 3,  2.80, 3.15,  1.90, 3.70, "red"),
+            ("Hallucination", 3, 3,  3.20, 2.85,  3.90, 2.40, "red"),
+            ("Data Breach",   2, 4,  1.85, 3.90,  0.90, 4.30, "red"),
+            ("Regulatory",    2, 4,  2.15, 4.10,  2.20, 4.45, "red"),
+            ("Model Drift",   3, 2,  2.80, 1.85,  1.90, 1.45, "orange"),
+            ("Shadow AI",     3, 2,  3.20, 2.15,  4.00, 1.70, "orange"),
+            ("Over-reliance", 2, 2,  2.00, 2.00,  1.00, 1.60, "gold"),
+        ]
 
         fig_risk = go.Figure()
-        fig_risk.add_shape(type="rect", x0=0.5, y0=0.5, x1=2.5, y1=2.5,
-                           fillcolor="rgba(76,175,80,0.15)", line_width=0)
-        fig_risk.add_shape(type="rect", x0=2.5, y0=2.5, x1=4.5, y1=4.5,
-                           fillcolor="rgba(244,67,54,0.15)", line_width=0)
-        fig_risk.add_shape(type="rect", x0=0.5, y0=2.5, x1=2.5, y1=4.5,
-                           fillcolor="rgba(255,152,0,0.15)", line_width=0)
-        fig_risk.add_shape(type="rect", x0=2.5, y0=0.5, x1=4.5, y1=2.5,
-                           fillcolor="rgba(255,152,0,0.15)", line_width=0)
+        # Background zones
+        for x0, y0, x1, y1, col in [
+            (0.5, 0.5, 2.5, 2.5, "rgba(76,175,80,0.12)"),
+            (2.5, 2.5, 4.5, 4.5, "rgba(244,67,54,0.12)"),
+            (0.5, 2.5, 2.5, 4.5, "rgba(255,152,0,0.12)"),
+            (2.5, 0.5, 4.5, 2.5, "rgba(255,152,0,0.12)"),
+        ]:
+            fig_risk.add_shape(type="rect", x0=x0, y0=y0, x1=x1, y1=y1,
+                               fillcolor=col, line_width=0)
 
-        fig_risk.add_trace(go.Scatter(
-            x=likelihood, y=impact,
-            mode="markers+text",
-            text=risk_names,
-            textposition="top center",
-            marker=dict(size=14, color=colors_risk, line=dict(color="white", width=1.5)),
-        ))
+        # Plot each dot individually and add an annotation arrow to the label
+        for name, _lh, _imp, dx, dy, lx, ly, c in risks:
+            fig_risk.add_trace(go.Scatter(
+                x=[dx], y=[dy], mode="markers",
+                marker=dict(size=16, color=c, line=dict(color="white", width=2)),
+                hovertemplate=f"<b>{name}</b><br>Likelihood: {_lh}/4<br>Impact: {_imp}/4<extra></extra>",
+                showlegend=False,
+            ))
+            fig_risk.add_annotation(
+                x=dx, y=dy, ax=lx, ay=ly,
+                text=f"<b>{name}</b>",
+                showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=1.2,
+                arrowcolor="#555", font=dict(size=11),
+                xref="x", yref="y", axref="x", ayref="y",
+                bgcolor="rgba(255,255,255,0.85)", borderpad=3,
+            )
+
+        fig_risk.add_annotation(x=1.5, y=1.0, text="LOW RISK", showarrow=False,
+                                font=dict(color="green", size=10, family="Arial Black"), opacity=0.5)
+        fig_risk.add_annotation(x=3.5, y=4.0, text="HIGH RISK", showarrow=False,
+                                font=dict(color="red", size=10, family="Arial Black"), opacity=0.5)
+        fig_risk.add_annotation(x=1.5, y=4.0, text="MEDIUM", showarrow=False,
+                                font=dict(color="darkorange", size=9), opacity=0.5)
+        fig_risk.add_annotation(x=3.5, y=1.0, text="MEDIUM", showarrow=False,
+                                font=dict(color="darkorange", size=9), opacity=0.5)
+
         fig_risk.update_layout(
             xaxis=dict(title="Likelihood", range=[0.5, 4.5],
                        tickvals=[1, 2, 3, 4],
@@ -272,14 +298,10 @@ if selected == "🏠 Overview":
             yaxis=dict(title="Impact", range=[0.5, 4.5],
                        tickvals=[1, 2, 3, 4],
                        ticktext=["Low", "Med-Low", "Medium", "Very High"]),
-            height=360,
+            height=420,
             showlegend=False,
             paper_bgcolor="rgba(0,0,0,0)",
         )
-        fig_risk.add_annotation(x=1.5, y=1.5, text="LOW", showarrow=False,
-                                font=dict(color="green", size=10), opacity=0.6)
-        fig_risk.add_annotation(x=3.5, y=3.5, text="HIGH", showarrow=False,
-                                font=dict(color="red", size=10), opacity=0.6)
         st.plotly_chart(fig_risk, use_container_width=True)
 
     with col_d:
