@@ -90,36 +90,229 @@ if selected == "🏠 Overview":
         st.metric("Standard", "ISO 42001", "AI Governance")
 
     st.markdown("---")
-    st.markdown("### Programme Modules")
 
-    modules_data = [
-        ("🎯", "AI Strategic Foundations",
-         "Understand how AI creates business value and how to shape organisational AI strategy."),
-        ("🤖", "AI Agents & Autonomous Systems",
-         "Explore agentic architectures, multi-agent frameworks, and autonomous decision systems."),
-        ("✨", "Generative AI for Service Delivery",
-         "Apply GenAI to transform service operations, quality, and productivity."),
-        ("⚖️", "AI Governance, Ethics & Risk",
-         "Build responsible-AI frameworks covering bias, fairness, accountability, and compliance."),
-        ("📋", "ISO 42001",
-         "Implement the international standard for AI Management Systems."),
-        ("💼", "AI-driven Client Experience & Service Quality",
-         "Use AI to personalise experiences, predict churn, and elevate SLAs."),
-        ("🚀", "Leading AI Adoption in Delivery Teams",
-         "Drive change management, upskilling, and culture shift for AI at scale."),
+    # ── Chart 1: Programme Sunburst ──────────────────────────────────────
+    st.markdown("### Programme at a Glance")
+
+    sunburst_labels = [
+        "AI Strategic Foundations",
+        # L1
+        "AI Strategy", "AI Agents", "GenAI Delivery",
+        "Governance", "ISO 42001", "Client Experience", "Adoption",
+        # L2 — Strategy
+        "Value Creation", "Strategy Canvas", "Archetypes",
+        # L2 — Agents
+        "ReAct Pattern", "Multi-Agent", "Tool Use", "Memory-Aug.",
+        # L2 — GenAI
+        "Support Bots", "Back-Office", "Knowledge Mgmt",
+        # L2 — Governance
+        "Fairness", "Transparency", "Accountability", "Safety",
+        # L2 — ISO
+        "Context", "Leadership", "Planning", "Operation", "Improvement",
+        # L2 — CX
+        "Personalisation", "Proactive Svc", "Quality AI",
+        # L2 — Adoption
+        "Clarity", "Capability", "Culture", "Collaboration", "Continuity",
     ]
+    sunburst_parents = [
+        "",
+        # L1
+        "AI Strategic Foundations", "AI Strategic Foundations", "AI Strategic Foundations",
+        "AI Strategic Foundations", "AI Strategic Foundations", "AI Strategic Foundations",
+        "AI Strategic Foundations",
+        # L2 — Strategy
+        "AI Strategy", "AI Strategy", "AI Strategy",
+        # L2 — Agents
+        "AI Agents", "AI Agents", "AI Agents", "AI Agents",
+        # L2 — GenAI
+        "GenAI Delivery", "GenAI Delivery", "GenAI Delivery",
+        # L2 — Governance
+        "Governance", "Governance", "Governance", "Governance",
+        # L2 — ISO
+        "ISO 42001", "ISO 42001", "ISO 42001", "ISO 42001", "ISO 42001",
+        # L2 — CX
+        "Client Experience", "Client Experience", "Client Experience",
+        # L2 — Adoption
+        "Adoption", "Adoption", "Adoption", "Adoption", "Adoption",
+    ]
+    sunburst_vals = [1] * len(sunburst_labels)
+    sunburst_vals[0] = 0
 
-    for icon, title, desc in modules_data:
-        st.markdown(f"""
-        <div class="module-card">
-            <strong>{icon} {title}</strong><br/>
-            <span style="font-size:0.9em; opacity:0.85;">{desc}</span>
-        </div>
-        """, unsafe_allow_html=True)
+    fig_sun = go.Figure(go.Sunburst(
+        labels=sunburst_labels,
+        parents=sunburst_parents,
+        values=sunburst_vals,
+        branchvalues="total",
+        textfont=dict(size=11),
+        insidetextorientation="radial",
+        marker=dict(colorscale="Blues"),
+    ))
+    fig_sun.update_layout(height=480, margin=dict(t=10, b=10, l=10, r=10))
+    st.plotly_chart(fig_sun, use_container_width=True)
 
     st.markdown("---")
 
-    # Maturity radar
+    # ── Chart 2: 5-C Framework radar  +  AI Adoption Roadmap ────────────
+    st.markdown("### Key Frameworks")
+    col_a, col_b = st.columns(2)
+
+    with col_a:
+        st.markdown("#### 5-C AI Adoption Framework")
+        five_c = ["Clarity", "Capability", "Culture", "Collaboration", "Continuity"]
+        five_c_desc = [
+            "Define & communicate the AI vision",
+            "Build skills & champion networks",
+            "Psychological safety to experiment",
+            "Break silos — biz, tech, data, risk",
+            "Embed AI into BAU & OKRs",
+        ]
+        five_c_scores = [90, 85, 75, 80, 70]
+
+        fig_5c = go.Figure()
+        fig_5c.add_trace(go.Scatterpolar(
+            r=five_c_scores + [five_c_scores[0]],
+            theta=five_c + [five_c[0]],
+            fill="toself",
+            fillcolor="rgba(25,118,210,0.2)",
+            line=dict(color="#1976d2", width=2.5),
+            mode="lines+markers+text",
+            text=[""] * 5 + [""],
+            name="Importance",
+        ))
+        fig_5c.update_layout(
+            polar=dict(radialaxis=dict(visible=True, range=[0, 100],
+                                       tickvals=[25, 50, 75, 100])),
+            showlegend=False,
+            height=340,
+            paper_bgcolor="rgba(0,0,0,0)",
+        )
+        st.plotly_chart(fig_5c, use_container_width=True)
+        for c, d in zip(five_c, five_c_desc):
+            st.markdown(f"**{c}** — {d}")
+
+    with col_b:
+        st.markdown("#### AI Adoption Roadmap")
+        phases = ["Explore", "Pilot", "Scale", "Optimise"]
+        starts = [0, 3, 6, 12]
+        ends   = [3, 6, 12, 18]
+        focus  = [
+            "Use-case ID · Awareness · Exec buy-in",
+            "2–3 pilots · Feedback loops · Champions",
+            "Productionise · Centre of Excellence · Governance",
+            "Continuous improvement · Next use-cases",
+        ]
+        colors = ["#bbdefb", "#64b5f6", "#1976d2", "#0d47a1"]
+
+        fig_road = go.Figure()
+        for i, (ph, s, e, f, c) in enumerate(zip(phases, starts, ends, focus, colors)):
+            fig_road.add_trace(go.Bar(
+                x=[e - s], y=[ph], orientation="h",
+                base=s,
+                marker_color=c,
+                text=f"<b>{ph}</b><br>{f}",
+                textposition="inside",
+                insidetextanchor="middle",
+                name=ph,
+                hovertemplate=f"<b>{ph}</b><br>Month {s}–{e}<br>{f}<extra></extra>",
+            ))
+        fig_road.update_layout(
+            barmode="stack",
+            xaxis=dict(title="Month", tickvals=list(range(0, 19, 3)),
+                       ticktext=[f"M{m}" for m in range(0, 19, 3)]),
+            yaxis=dict(title=""),
+            showlegend=False,
+            height=340,
+            paper_bgcolor="rgba(0,0,0,0)",
+        )
+        st.plotly_chart(fig_road, use_container_width=True)
+
+        roadmap_df = pd.DataFrame({
+            "Phase": phases,
+            "Timeline": [f"Month {s}–{e}" for s, e in zip(starts, ends)],
+            "Focus": focus,
+        })
+        st.dataframe(roadmap_df, use_container_width=True, hide_index=True)
+
+    st.markdown("---")
+
+    # ── Chart 3: AI Risk Heatmap  +  ISO 42001 Gauge ────────────────────
+    st.markdown("### Governance Snapshot")
+    col_c, col_d = st.columns(2)
+
+    with col_c:
+        st.markdown("#### AI Risk Heatmap")
+        risk_names = ["Model Bias", "Hallucination", "Data Breach",
+                      "Regulatory", "Model Drift", "Shadow AI", "Over-reliance"]
+        likelihood = [3, 3, 2, 2, 3, 3, 2]
+        impact     = [3, 3, 4, 4, 2, 2, 2]
+        colors_risk = ["red" if (l + i) >= 6 else "orange" if (l + i) >= 5 else "gold"
+                       for l, i in zip(likelihood, impact)]
+
+        fig_risk = go.Figure()
+        fig_risk.add_shape(type="rect", x0=0.5, y0=0.5, x1=2.5, y1=2.5,
+                           fillcolor="rgba(76,175,80,0.15)", line_width=0)
+        fig_risk.add_shape(type="rect", x0=2.5, y0=2.5, x1=4.5, y1=4.5,
+                           fillcolor="rgba(244,67,54,0.15)", line_width=0)
+        fig_risk.add_shape(type="rect", x0=0.5, y0=2.5, x1=2.5, y1=4.5,
+                           fillcolor="rgba(255,152,0,0.15)", line_width=0)
+        fig_risk.add_shape(type="rect", x0=2.5, y0=0.5, x1=4.5, y1=2.5,
+                           fillcolor="rgba(255,152,0,0.15)", line_width=0)
+
+        fig_risk.add_trace(go.Scatter(
+            x=likelihood, y=impact,
+            mode="markers+text",
+            text=risk_names,
+            textposition="top center",
+            marker=dict(size=14, color=colors_risk, line=dict(color="white", width=1.5)),
+        ))
+        fig_risk.update_layout(
+            xaxis=dict(title="Likelihood", range=[0.5, 4.5],
+                       tickvals=[1, 2, 3, 4],
+                       ticktext=["Low", "Med-Low", "Medium", "High"]),
+            yaxis=dict(title="Impact", range=[0.5, 4.5],
+                       tickvals=[1, 2, 3, 4],
+                       ticktext=["Low", "Med-Low", "Medium", "Very High"]),
+            height=360,
+            showlegend=False,
+            paper_bgcolor="rgba(0,0,0,0)",
+        )
+        fig_risk.add_annotation(x=1.5, y=1.5, text="LOW", showarrow=False,
+                                font=dict(color="green", size=10), opacity=0.6)
+        fig_risk.add_annotation(x=3.5, y=3.5, text="HIGH", showarrow=False,
+                                font=dict(color="red", size=10), opacity=0.6)
+        st.plotly_chart(fig_risk, use_container_width=True)
+
+    with col_d:
+        st.markdown("#### ISO 42001 Clause Coverage")
+        iso_clauses = ["Context", "Leadership", "Planning", "Support",
+                       "Operation", "Perf. Eval.", "Improvement"]
+        iso_coverage = [70, 65, 60, 55, 50, 45, 40]
+
+        fig_iso = go.Figure()
+        fig_iso.add_trace(go.Bar(
+            x=iso_coverage, y=iso_clauses,
+            orientation="h",
+            marker=dict(
+                color=iso_coverage,
+                colorscale=[[0, "#bbdefb"], [0.5, "#1976d2"], [1, "#0d47a1"]],
+                showscale=False,
+            ),
+            text=[f"{v}%" for v in iso_coverage],
+            textposition="outside",
+        ))
+        fig_iso.add_vline(x=80, line_dash="dash", line_color="red",
+                          annotation_text="Target 80%", annotation_position="top right")
+        fig_iso.update_layout(
+            xaxis=dict(title="Compliance Coverage %", range=[0, 105]),
+            yaxis=dict(title=""),
+            height=360,
+            paper_bgcolor="rgba(0,0,0,0)",
+        )
+        st.plotly_chart(fig_iso, use_container_width=True)
+
+    st.markdown("---")
+
+    # ── Chart 4: Maturity Radar (interactive) ───────────────────────────
     st.markdown("### AI Maturity Self-Assessment")
     st.caption("Rate your organisation's current maturity across the seven dimensions (1 = Early · 5 = Leading)")
 
@@ -133,20 +326,36 @@ if selected == "🏠 Overview":
         with col:
             scores.append(st.slider(dim, 1, 5, 3, key=f"radar_{i}"))
 
-    fig = go.Figure(go.Scatterpolar(
+    fig_radar = go.Figure()
+    fig_radar.add_trace(go.Scatterpolar(
+        r=[5] * len(dims) + [5],
+        theta=dims + [dims[0]],
+        fill="toself",
+        fillcolor="rgba(244,67,54,0.07)",
+        line=dict(color="rgba(244,67,54,0.3)", dash="dot"),
+        name="Leading (5)",
+    ))
+    fig_radar.add_trace(go.Scatterpolar(
         r=scores + [scores[0]],
         theta=dims + [dims[0]],
         fill="toself",
         fillcolor="rgba(79,195,247,0.25)",
-        line=dict(color="#4fc3f7", width=2),
+        line=dict(color="#4fc3f7", width=2.5),
+        name="Your Org",
+        mode="lines+markers",
+        marker=dict(size=7),
     ))
-    fig.update_layout(
+    fig_radar.update_layout(
         polar=dict(radialaxis=dict(visible=True, range=[0, 5])),
-        showlegend=False,
-        height=400,
+        legend=dict(orientation="h"),
+        height=420,
         paper_bgcolor="rgba(0,0,0,0)",
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig_radar, use_container_width=True)
+
+    avg = sum(scores) / len(scores)
+    level = "Leading" if avg >= 4.5 else "Advanced" if avg >= 3.5 else "Developing" if avg >= 2.5 else "Emerging"
+    st.info(f"Average maturity score: **{avg:.1f} / 5** — **{level}** stage")
 
 
 # ──────────────────────────────────────────────
